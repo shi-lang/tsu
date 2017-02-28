@@ -74,6 +74,10 @@ func NewVec(value []*Obj) *Obj {
 	return &Obj{typ: OTVec, vecv: value}
 }
 
+func NewMap(value map[string]*Obj) *Obj {
+	return &Obj{typ: OTVec, mapv: value}
+}
+
 func NewCall(calleeSym *Obj, argsVec *Obj) *Obj {
 	return &Obj{typ: OTCall, objv: calleeSym, vecv: argsVec.vecv}
 }
