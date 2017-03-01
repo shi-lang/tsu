@@ -54,5 +54,6 @@ func EvalMap(env *Obj, val *Obj) *Obj {
 }
 
 func EvalCall(env *Obj, val *Obj) *Obj {
-	return EnvGet(env, "nil")
+	callee := Eval(env, InternSym(val.strv))
+	return nil
 }

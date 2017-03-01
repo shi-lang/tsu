@@ -8,17 +8,17 @@ import (
 type ObjType int
 
 const (
-	OTInt    ObjType = iota
-	OTStr            = iota
-	OTKey            = iota
-	OTSym            = iota
-	OTVec            = iota
-	OTMap            = iota
-	OTObj            = iota
-	OTCall           = iota
-	OTRParen         = iota
-	OTRSqaBr         = iota
-	OTRCurBr         = iota
+	OTInt     ObjType = iota
+	OTStr             = iota
+	OTKey             = iota
+	OTSym             = iota
+	OTVec             = iota
+	OTMap             = iota
+	OTObj             = iota
+	OTMessage         = iota
+	OTRParen          = iota
+	OTRSqaBr          = iota
+	OTRCurBr          = iota
 )
 
 var RParen = &Obj{typ: OTRParen}
@@ -78,8 +78,8 @@ func NewMap(value map[string]*Obj) *Obj {
 	return &Obj{typ: OTVec, mapv: value}
 }
 
-func NewCall(calleeSym *Obj, argsVec *Obj) *Obj {
-	return &Obj{typ: OTCall, objv: calleeSym, vecv: argsVec.vecv}
+func NewMessage(calleeSym *Obj, argsVec *Obj) *Obj {
+	return &Obj{typ: OTMessage, objv: calleeSym, vecv: argsVec.vecv}
 }
 
 func (o *Obj) String() string {
@@ -119,14 +119,14 @@ func (o *Obj) String() string {
 	case OTObj:
 		return "Obj(...)"
 	case OTCall:
-		ret := o.objv.strv + "["
+		ret := o.objv.strv + "("
 		for i, v := range o.vecv {
 			if i != 0 {
 				ret += " "
 			}
 			ret += v.String()
 		}
-		ret += "]"
+		ret += ")"
 		return ret
 	default:
 		panic("obj: string: unhandled obj type")

@@ -41,11 +41,11 @@ func (s *ParserState) ParseNum() *Obj {
 }
 
 func (s *ParserState) ValidSymFirstChar(c rune) bool {
-	return strconv.IsPrint(c) && !strings.ContainsRune(" :[](){}#|`'\"\\", c) && !s.ValidNumChar(c)
+	return strconv.IsPrint(c) && !strings.ContainsRune(" :[](){}#`'\"\\", c) && !s.ValidNumChar(c)
 }
 
 func (ParserState) ValidSymChar(c rune) bool {
-	return strconv.IsPrint(c) && !strings.ContainsRune(" :[](){}#|`'\"\\", c)
+	return strconv.IsPrint(c) && !strings.ContainsRune(" :[](){}#`'\"\\", c)
 }
 
 func (s *ParserState) ParseSym() *Obj {
@@ -56,21 +56,34 @@ func (s *ParserState) ParseSym() *Obj {
 	}
 
 	// Parse function application
-	if s.Peek() == '[' {
-		callArgs := s.ParseVec()
+	if s.Peek() == '(' {
+		callArgs := s.ParseArgs()
 		return NewCall(InternSym(sym), callArgs)
 	}
 
 	return InternSym(sym)
 }
 
-func (s *ParserState) ParseVec() *Obj {
+func (ParserState) ValidKeyChar(c rune) bool {
+	return strconv.IsPrint(c) && !strings.ContainsRune(" :[](){}#`'\"\\", c)
+}
+
+func (s *ParserState) ParseKey() *Obj {
+	var key string = ""
+	for s.ValidSymChar(s.Peek()) {
+		key += string(s.Peek())
+		s.Read()
+	}
+	return InternSym(key)
+}
+
+func (s *ParserState) ParseArgs() *Obj {
 	items := []*Obj{}
-	s.Read() // Skip opening [
+	s.Read() // Skip opening (
 	o := s.Parse()
-	for o != RSqaBr {
+	for o != RParen {
 		if o == nil {
-			panic("parser: unterminated square bracket '['")
+			panic("parser: unterminated parenthesis '('")
 		}
 		items = append(items, o)
 		o = s.Parse()
@@ -93,8 +106,6 @@ func (s *ParserState) Parse() *Obj {
 			}
 		}
 		return s.Parse()
-	} else if c == '[' {
-		return s.ParseVec()
 	} else if c == ')' {
 		s.Read()
 		return RParen
@@ -104,6 +115,8 @@ func (s *ParserState) Parse() *Obj {
 	} else if c == '}' {
 		s.Read()
 		return RCurBr
+	} else if c == ':' {
+		return s.ParseKey()
 	} else if s.ValidNumChar(c) {
 		return s.ParseNum()
 	} else if s.ValidSymFirstChar(c) {
@@ -113,20 +126,21 @@ func (s *ParserState) Parse() *Obj {
 	}
 }
 
-func Parse(input string) []*Obj {
+func Parse(input string) *Obj {
 	ps := &ParserState{input, 0}
-	ast := []*Obj{}
-	for node := ps.Parse(); node != nil; node = ps.Parse() {
-		if node == RParen {
-			panic("parser: extra closing parens ')' found")
+	return ps.Parse()
+	/*
+		for node := ps.Parse(); node != nil; node = ps.Parse() {
+			if node == RParen {
+				panic("parser: extra closing parens ')' found")
+			}
+			if node == RSqaBr {
+				panic("parser: extra closing square bracket ']' found")
+			}
+			if node == RCurBr {
+				panic("parser: extra closing curly brace '}' found")
+			}
 		}
-		if node == RSqaBr {
-			panic("parser: extra closing square bracket ']' found")
-		}
-		if node == RCurBr {
-			panic("parser: extra closing curly brace '}' found")
-		}
-		ast = append(ast, node)
-	}
-	return ast
+		return ast
+	*/
 }
